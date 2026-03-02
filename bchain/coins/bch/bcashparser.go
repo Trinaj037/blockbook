@@ -111,7 +111,7 @@ func (p *BCashParser) GetAddrDescFromAddress(address string) (bchain.AddressDesc
 
 // addressToOutputScript converts bitcoin address to ScriptPubKey
 func (p *BCashParser) addressToOutputScript(address string) ([]byte, error) {
-	if isCashAddr(address) {
+	if btc.HasCashAddrPrefix(address, MainNetPrefix, TestNetPrefix, RegTestPrefix) {
 		da, err := bchutil.DecodeAddress(address, p.Params)
 		if err != nil {
 			return nil, err
@@ -131,20 +131,6 @@ func (p *BCashParser) addressToOutputScript(address string) ([]byte, error) {
 		return nil, err
 	}
 	return script, nil
-}
-
-func isCashAddr(addr string) bool {
-	n := len(addr)
-	switch {
-	case n > len(MainNetPrefix) && addr[0:len(MainNetPrefix)] == MainNetPrefix:
-		return true
-	case n > len(TestNetPrefix) && addr[0:len(TestNetPrefix)] == TestNetPrefix:
-		return true
-	case n > len(RegTestPrefix) && addr[0:len(RegTestPrefix)] == RegTestPrefix:
-		return true
-	}
-
-	return false
 }
 
 // outputScriptToAddresses converts ScriptPubKey to bitcoin addresses
