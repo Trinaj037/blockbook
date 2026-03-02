@@ -989,19 +989,23 @@ func (b *EthereumRPC) getInternalDataForBlock(ctx context.Context, blockHash str
 		}
 		if len(trace) != len(data) {
 			if len(trace) < len(data) {
+				// bridging transactions in Polygon do not create trace and cause mismatch between the trace size and block size, it is necessary to adjust the trace size
+				// bridging transaction that from and to zero address
+				// rebuild the trace slice in O(n) by walking transactions and original trace in parallel
+				adjusted := make([]rpcTraceResult, 0, len(transactions))
+				ti := 0
 				for i := range transactions {
 					tx := &transactions[i]
-					// bridging transactions in Polygon do not create trace and cause mismatch between the trace size and block size, it is necessary to adjust the trace size
-					// bridging transaction that from and to zero address
 					if tx.To == "0x0000000000000000000000000000000000000000" && tx.From == "0x0000000000000000000000000000000000000000" {
-						if i >= len(trace) {
-							trace = append(trace, rpcTraceResult{})
-						} else {
-							trace = append(trace[:i+1], trace[i:]...)
-							trace[i] = rpcTraceResult{}
-						}
+						adjusted = append(adjusted, rpcTraceResult{})
+					} else if ti < len(trace) {
+						adjusted = append(adjusted, trace[ti])
+						ti++
+					} else {
+						adjusted = append(adjusted, rpcTraceResult{})
 					}
 				}
+				trace = adjusted
 			}
 			if len(trace) != len(data) {
 				e := fmt.Sprint("trace length does not match block length ", len(trace), "!=", len(data))
