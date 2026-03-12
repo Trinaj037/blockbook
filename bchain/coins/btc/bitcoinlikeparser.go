@@ -106,6 +106,17 @@ func (p *BitcoinLikeParser) addressToOutputScript(address string) ([]byte, error
 	return script, nil
 }
 
+// HasCashAddrPrefix returns true if the address starts with any of the given CashAddr prefixes
+func HasCashAddrPrefix(addr string, prefixes ...string) bool {
+	n := len(addr)
+	for _, prefix := range prefixes {
+		if n > len(prefix) && addr[0:len(prefix)] == prefix {
+			return true
+		}
+	}
+	return false
+}
+
 // TryParseOPReturn tries to process OP_RETURN script and return its string representation
 func (p *BitcoinLikeParser) TryParseOPReturn(script []byte) string {
 	if len(script) > 1 && script[0] == txscript.OP_RETURN {
